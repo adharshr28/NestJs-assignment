@@ -15,7 +15,7 @@ export class AuthController {
   async login(@Body() createUserDto: CreateUserDto) {
     const user = await this.authService.validateUser(createUserDto.username, createUserDto.password);
     if (!user) {
-      return 'Incorrect username or password';
+      return 'Wrong credentials';
     }
     return this.authService.login(user);
   }

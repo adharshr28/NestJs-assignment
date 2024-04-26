@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 
 @Entity()
 @Unique(['username'])
@@ -13,7 +12,6 @@ export class User {
   @Column()
   password: string;
 
-  async validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
-  }
+  @Column("simple-array")
+  roles: string[];  // Stores roles as a simple array
 }
