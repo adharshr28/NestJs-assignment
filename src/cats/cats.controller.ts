@@ -18,11 +18,13 @@ export class CatsController {
   }
 
   @Get()
+  @Roles(['admin', 'user'])
   async findAll(): Promise<Cat[]> {
     return this.catsService.findAll();
   }
 
   @Get(':id')
+  @Roles(['admin', 'user'])
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<Cat> {
     return this.catsService.findOne(id);
   }

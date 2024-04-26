@@ -1,12 +1,25 @@
-// cats.controller.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { CatsController } from './cats.controller';
 import { CatsService } from './cats.service';
 import { CreateCatDto } from './dto/create-cat.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 
 describe('CatsController', () => {
   let controller: CatsController;
   let service: CatsService;
+
+  const mockGuard = {
+    canActivate: (context: ExecutionContext) => {
+      const requiredRoles = new Reflector().get<string[]>('roles', context.getHandler());
+      // Simulate role checking logic: if roles include 'admin', allow access.
+      if (requiredRoles.includes('admin')) {
+        return true;  // Change to false to simulate unauthorized access
+      }
+      return false;
+    }
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +40,10 @@ describe('CatsController', () => {
             remove: jest.fn().mockResolvedValue(undefined),
           },
         },
+        {
+          provide: RolesGuard,
+          useValue: mockGuard
+        }
       ],
     }).compile();
 
@@ -39,8 +56,9 @@ describe('CatsController', () => {
     expect(service).toBeDefined();
   });
 
+  // Add tests specific for role-based access
   describe('create()', () => {
-    it('should create and return the created cat', async () => {
+    it('should create and return the created cat for admin', async () => {
       const createCatDto: CreateCatDto = { name: 'Pixel', age: 2, breed: 'Bombay' };
       expect(await controller.create(createCatDto)).toEqual({ id: 1, ...createCatDto });
       expect(service.create).toHaveBeenCalledWith(createCatDto);
@@ -48,7 +66,7 @@ describe('CatsController', () => {
   });
 
   describe('findAll()', () => {
-    it('should return an array of cats', async () => {
+    it('should return an array of cats for user', async () => {
       const result = await controller.findAll();
       expect(result).toEqual([{ name: 'Pixel', age: 2, breed: 'Bombay' }]);
       expect(service.findAll).toHaveBeenCalled();
@@ -56,7 +74,7 @@ describe('CatsController', () => {
   });
 
   describe('findOne()', () => {
-    it('should return a single cat by id', async () => {
+    it('should return a single cat by id for user', async () => {
       const catId = 1;
       const expectedCat = { id: catId, name: 'Pixel', age: 2, breed: 'Bombay' };
       expect(await controller.findOne(catId)).toEqual(expectedCat);
@@ -65,7 +83,7 @@ describe('CatsController', () => {
   });
 
   describe('remove()', () => {
-    it('should remove the cat', async () => {
+    it('should remove the cat for admin', async () => {
       const catId = 1;
       await controller.remove(catId);
       expect(service.remove).toHaveBeenCalledWith(catId);
